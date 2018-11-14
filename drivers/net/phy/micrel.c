@@ -436,6 +436,10 @@ static int ksz9031_of_load_skew_values(struct phy_device *phydev,
 				(((val[i] / KSZ9031_PS_TO_REG) & maxval)
 					<< (field_sz * i));
 		}
+#ifdef CONFIG_BAIKAL_ERRATA_GBE_PHY_MICREL
+	if (reg == 8)
+		newval |= (0x1f << 5);
+#endif
 
 	return ksz9031_extended_write(phydev, OP_DATA, 2, reg, newval);
 }

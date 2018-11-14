@@ -529,7 +529,8 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
 	 * hierarchies.
 	 */
 	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
-	    pci_pcie_type(pdev) == PCI_EXP_TYPE_PCIE_BRIDGE) {
+	    pci_pcie_type(pdev) == PCI_EXP_TYPE_PCIE_BRIDGE ||
+	    pci_is_root_bus(pdev->bus->parent)) {
 		link->root = link;
 	} else {
 		struct pcie_link_state *parent;

@@ -1,0 +1,8 @@
+config DRM_SMI
+	tristate "Silicon Motion video cards"
+	depends on DRM && PCI
+	select DRM_GEM_CMA_HELPER
+	select DRM_KMS_CMA_HELPER
+	help
+	  Choose this option to enable DRM on sm750/718/501 chipset.
+
