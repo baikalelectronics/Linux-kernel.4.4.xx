@@ -24,8 +24,10 @@
 		serial1 = &uart1;
 		i2c0 = &i2c0;
 		i2c1 = &i2c1;
+		bc   = &bc;
 		ssi0 = &spi0;
 		ssi1 = &spi1;
+		ssi2 = &spi2;
 		ethernet0 = &gmac0;
 		ethernet1 = &gmac1;
 		ethernet2 = &xgmac;
@@ -114,6 +116,7 @@
 			clock-names = "hclk";
 		};
 
+
 		emc@1F042000 {
 			compatible = "be,emc", "be,memory-controller";
 			reg = <0x1F042000 0x1000>;
@@ -168,6 +171,23 @@
 						 <GIC_SHARED 89 IRQ_TYPE_LEVEL_HIGH>;
 			reg = <0x1F052000 0x1000>;
 			status = "disabled";
+		};
+
+		edma: edma@1F053000 {
+			compatible = "be,baikal-edma";
+			reg = <0x1F053000 0x1000>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SHARED 80 IRQ_TYPE_LEVEL_HIGH>,
+					<GIC_SHARED 81 IRQ_TYPE_LEVEL_HIGH>,
+					<GIC_SHARED 82 IRQ_TYPE_LEVEL_HIGH>,
+					<GIC_SHARED 83 IRQ_TYPE_LEVEL_HIGH>,
+					<GIC_SHARED 84 IRQ_TYPE_LEVEL_HIGH>,
+					<GIC_SHARED 85 IRQ_TYPE_LEVEL_HIGH>,
+					<GIC_SHARED 86 IRQ_TYPE_LEVEL_HIGH>,
+					<GIC_SHARED 87 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "eDMA-Tx-0", "eDMA-Tx-1", "eDMA-Tx-2", "eDMA-Tx-3",
+					"eDMA-Rx-0", "eDMA-Rx-1", "eDMA-Rx-2", "eDMA-Rx-3";
+			upstream = <&pci>;
 		};
 
 		xgmac: eth0@1F054000 {
@@ -242,6 +262,12 @@
 
 		ranges;
 
+		bc: bc@1F040000 {
+			compatible = "be,bc";
+			reg = <0x1F040000 0x100>;
+			status = "disabled";
+		};
+
 		gpio: gpio@1F044000 {
 			compatible = "snps,dw-apb-gpio";
 			reg = <0x1F044000 0x1000>;
@@ -258,6 +284,22 @@
 				#interrupt-cells = <2>;
 				interrupt-controller;
 				interrupts = <GIC_SHARED 19 IRQ_TYPE_LEVEL_HIGH>;
+			};
+		};
+
+		gpio3: gpio@1F045000 {
+			compatible = "snps,dw-apb-gpio";
+			reg = <0x1F045000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+
+			portb: gpio-controller@0 {
+				compatible = "snps,dw-apb-gpio-port";
+				#gpio-cells = <2>;
+				gpio-controller;
+				snps,nr-gpios = <3>;
+				reg = <0>;
 			};
 		};
 
@@ -360,6 +402,17 @@
 			clocks = <&spi1_clk 0>;
 			clock-names = "spi1clk";
 			status = "disabled";
+		};
+
+		spi2: spi2@1F040100 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,dw-spi-boot";
+			reg = <0x1F040100 0xF00>;
+			clocks = <&boot_clk 0>;
+			clock-names = "bootclk";
+			status = "disabled";
+			/* no interrupts */
 		};
 
 		apb_ehb@1F059000 {

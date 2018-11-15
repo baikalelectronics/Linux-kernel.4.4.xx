@@ -24,8 +24,10 @@
 		serial1 = &uart1;
 		i2c0 = &i2c0;
 		i2c1 = &i2c1;
+		bc   = &bc;
 		ssi0 = &spi0;
 		ssi1 = &spi1;
+		ssi2 = &spi2;
 		ethernet0 = &gmac0;
 		ethernet1 = &gmac1;
 		ethernet2 = &xgmac;
@@ -236,6 +238,12 @@
 
 		ranges;
 
+		bc: bc@1F040000 {
+			compatible = "be,bc";
+			reg = <0x1F040000 0x100>;
+			status = "disabled";
+		};
+
 		gpio: gpio@1F044000 {
 			compatible = "snps,dw-apb-gpio";
 			reg = <0x1F044000 0x1000>;
@@ -354,6 +362,17 @@
 			clocks = <&spi1_clk 0>;
 			clock-names = "spi1clk";
 			status = "disabled";
+		};
+
+		spi2: spi2@1F040100 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,dw-spi-boot";
+			reg = <0x1F040100 0xF00>;
+			clocks = <&boot_clk 0>;
+			clock-names = "bootclk";
+			status = "disabled";
+			/* no interrupts */
 		};
 
 		apb_ehb@1F059000 {

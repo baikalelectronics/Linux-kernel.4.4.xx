@@ -107,38 +107,44 @@
 	status = "okay";
 };
 
+&bc {
+	status = "okay";
+};
+
 &spi0 {
+	reg-io-width = <4>;
 	num-cs = <3>;
-	cs-gpios = <&porta 28 GPIO_ACTIVE_LOW>,
-			   <&porta 23 GPIO_ACTIVE_LOW>;
+	cs-gpios = <&porta 23 GPIO_ACTIVE_LOW>,
+			   <&porta 28 GPIO_ACTIVE_LOW>,
+			   <&porta 29 GPIO_ACTIVE_LOW>;
 
 	status = "okay";
 
-	flash0: m25p80@0 {
+	flash@0 {
 		#address-cells = <1>;
 		#size-cells = <1>;
 		status = "okay";
 		compatible = "micron,n25q256a", "jedec,spi-nor";
 		reg = <0>;
 		spi-max-frequency = <10000000>;
-		m25p,fast-read;
+		/* m25p,fast-read; */
 
-		mtd0@00000000 {
+		mtd@00000000 {
 			label = "flash0";
 			reg = <0x00000000 0x02000000>;
 		};
 	};
 
-	flash1: m25p80@1 {
+	flash@1 {
 		#address-cells = <1>;
 		#size-cells = <1>;
 		status = "okay";
 		compatible = "micron,n25q256a", "jedec,spi-nor";
 		reg = <1>;
 		spi-max-frequency = <10000000>;
-		m25p,fast-read;
+		/* m25p,fast-read; */
 
-		mtd1@00000000 {
+		mtd@00000000 {
 			label = "flash1";
 			reg = <0x00000000 0x02000000>;
 		};
@@ -150,4 +156,41 @@
 	cs-gpios = <&porta 17 GPIO_ACTIVE_HIGH>;
 
 	status = "okay";
+};
+
+&spi2 {
+	reg-io-width = <4>;
+	num-cs = <1>;
+	status = "okay";
+
+	flash@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		status = "okay";
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <100000>;
+
+		/* total size 16MB */
+		part@0 {
+			label = "UBOOT";
+			reg = <0x0 0x80000>;
+		};
+		part@80000 {
+			label = "ENVSET";
+			reg = <0x80000 0x10000>;
+		};
+		part@90000 {
+			label = "FIRMWARE";
+			reg = <0x90000 0x10000>;
+		};
+		part@A0000 {
+			label = "FDT";
+			reg = <0xa0000 0x10000>;
+		};
+		part@B0000 {
+			label = "MULTIIMAGE";
+			reg = <0xb0000 0xf50000>;
+		};
+	};
 };

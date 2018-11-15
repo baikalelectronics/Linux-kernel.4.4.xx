@@ -23,9 +23,8 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
-#include <linux/device.h>	/* dev_err */
 #include <linux/module.h>
-#include <linux/of_platform.h>	/* open firmware functioons */
+#include <linux/of_platform.h>	/* open firmware functions */
 #include <linux/delay.h>
 
 #include <asm/mips-cm.h>
@@ -241,6 +240,7 @@ static int dw_pcie_init(void)
 	 * CORE_RST
 	 * NON_STICKY_RST
 	 */
+#ifndef CONFIG_MACH_BAIKAL_BFK 	/* we have Baikal-T1 chip, perform enhanced reset procedure */
 	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
 	if ( reg & PMU_PCIE_RSTC_REQ_RESET ) {
 		/* PIPE_RESET */
@@ -357,7 +357,19 @@ static int dw_pcie_init(void)
 	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
 	reg &= ~PMU_PCIE_RSTC_PWR_RST;
 	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
+#else /* we have Baikal-T chip, perform simplified reset procedure */
+	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
+	reg |= (PMU_PCIE_RSTC_PHY_RESET | PMU_PCIE_RSTC_PIPE_RESET |
+		PMU_PCIE_RSTC_CORE_RST|  PMU_PCIE_RSTC_PWR_RST |
+		PMU_PCIE_RSTC_STICKY_RST | PMU_PCIE_RSTC_NONSTICKY_RST
+		/*PMU_PCIE_RSTC_HOT_RESET*/);
+	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
 
+	reg &= ~(PMU_PCIE_RSTC_PHY_RESET | PMU_PCIE_RSTC_PIPE_RESET |
+		PMU_PCIE_RSTC_CORE_RST|  PMU_PCIE_RSTC_PWR_RST |
+		PMU_PCIE_RSTC_STICKY_RST | PMU_PCIE_RSTC_NONSTICKY_RST);
+	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
+#endif /* CONFIG_MACH_BAIKAL_BFK */
 
 	/* 3.1 Set DBI2 mode, dbi2_cs = 0x1 */
 	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
@@ -679,6 +691,7 @@ void __init mips_pcibios_init(void)
 	ioport_resource.end = controller->io_resource->end;
 	controller->io_map_base = IO_BASE;
 	controller->io_offset = 0;
+
 	register_pci_controller(controller);
 
 #ifdef CONFIG_CPU_SUPPORTS_UNCACHED_ACCELERATED
@@ -726,6 +739,9 @@ static int dw_pci_drv_probe(struct platform_device *pdev)
 
 	dev_info(&pdev->dev, "DW PCIe driver successfully loaded.\n");
 	dev_info(&pdev->dev, "MSI IRQ:%d   AER IRQ:%d\n", dw_msi_irq, dw_aer_irq);
+
+	/* fill of_node field to help eDMAC driver find the controller when initializing */
+	dw_controller.of_node = pdev->dev.of_node;
 
 	/* Return success */
 	return 0;

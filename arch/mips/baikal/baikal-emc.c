@@ -61,6 +61,8 @@
 #define	DRAM_TYPE_LPDDR3		(1 << 3)
 #define	DRAM_TYPE_DDR4			(1 << 4)
 
+/* #define ECC_ERR_HNDL_TEST */		/* Uncomment this one, if you want check ECC error handlers */
+
 struct be_emc_info {
 	unsigned char cfg;
 	unsigned char ranks;
@@ -133,6 +135,63 @@ static void be_emc_sysfs_remove(struct device *dev)
 static void be_emc_sysfs_init(struct device *dev) {}
 static void be_emc_sysfs_remove(struct device *dev) {}
 #endif
+
+#ifdef ECC_ERR_HNDL_TEST
+static void be_emc_test(struct be_emc *emc)
+{
+	int *testaddr;
+	volatile int dummy;
+	int k;
+	int reg;
+	int *eccerrcnt;
+	/*
+	 * Debug reading to check interrupts from correctable and uncorrectable errors.
+	 * The procedure is made at the following physical addresses 0xA0000000 - 0xA8000000.
+	 * It's unmapped and uncacheable region of memory, for more information see p5600 legacy model.
+	 * Type of error is set by ECCCFG1 in u-boot firmware.
+	 * If you want change type of interrupt, you should build new u-boot fw.
+	 */
+	testaddr  = (int *)0xA0000000;
+	eccerrcnt = (int *)0xbf042080;
+	reg = readl(eccerrcnt);
+	dev_info(emc->dev,"ECC error counter before first artificial iteration =  %x",(int)reg);
+	k = 0;
+	while(testaddr < (int *)0xA8000000){
+		if (k == 500000){
+			dev_info(emc->dev,"First iteration on addr =  %x",(int)testaddr);
+			k=0;
+			dummy = readl(testaddr);
+			dev_info(emc->dev,"Value of reg =  %x",dummy);	/* Print every 50 000 reg value for save from compiler optimization */
+			testaddr++;
+		}
+		else{
+			k++;
+		}
+		dummy = readl(testaddr);
+		testaddr++;
+	}
+	reg = readl(eccerrcnt);
+	dev_info(emc->dev,"ECC error counter before second artificial iteration =  %x",(int)reg);
+	testaddr = (int *)0xA0000000;
+	k = 0;
+	while(testaddr < (int *)0xA8000000){
+		if (k == 500000){
+			dev_info(emc->dev,"Second iteration on addr =  %x",(int)testaddr);
+			k=0;
+			dummy = readl(testaddr);
+			dev_info(emc->dev,"Vakue of reg =  %x",dummy);
+			testaddr++;
+		}
+		else{
+			k++;
+		}
+		dummy = readl(testaddr);
+		testaddr++;
+	}
+	reg = readl(eccerrcnt);
+	dev_info(emc->dev,"ECC error counter after second artificial iteration =  %x",(int)reg);
+}
+#endif /* ECC_ERR_HNDL_TEST */
 
 static irqreturn_t be_emc_irq(int irq, void *data)
 {
@@ -223,9 +282,9 @@ static void be_emc_init(struct be_emc *emc)
 	reg = readl(emc->regs + EMC_ECCCFG0);
 	info->ecc = (reg & 0x07) ? 1 : 0;
 
-	dev_info(emc->dev, "%s x%d ranks:%d ecc:%s burst:%d bus:DQ/%d "
+	dev_info(emc->dev, "%s ranks:%d ecc:%s burst:%d bus:DQ/%d "
 		"timing:%dT bchop:%d bmode:%d\n", be_emc_ddr_type(info->type),
-		info->cfg, info->ranks, info->ecc ? "on":"off", 
+		info->ranks, info->ecc ? "on":"off",
 		info->burst, info->dqdiv, info->timing, info->bchop, info->bmode);
 	
 	/* Enable DFI irq and clear status */
@@ -309,6 +368,9 @@ __main:
 	/* Register sysfs entries */
 	be_emc_sysfs_init(&pdev->dev);
 
+#ifdef ECC_ERR_HNDL_TEST
+	be_emc_test(emc);  /* Call ECC Test */
+#endif /* ECC_ERR_HNDL_TEST */
 	return 0;
 }
 

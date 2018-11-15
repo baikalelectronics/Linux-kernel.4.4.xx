@@ -49,6 +49,9 @@ choice
 config MACH_BAIKAL_BFK
 bool "Baikal-T BFK board"
 
+    # Boot Controller support
+    select BE_BC
+
     # Hardware features
     select HW_HAS_PCI
     select HW_PERF_EVENTS
@@ -105,6 +108,7 @@ bool "Baikal-T BFK board"
     # SPI bus support
     select SPI_DESIGNWARE
     select SPI_DW_MMIO
+    select SPI_DW_BOOT
 
     # USB Support
     select USB_DWC3
@@ -115,8 +119,11 @@ bool "Baikal-T BFK board"
     # DTB select
     select DTB_BAIKAL_BFK
 
-config MACH_BAIKAL_BFK2
-bool "Baikal-T1 BFK2 board"
+config MACH_BAIKAL_BFK3
+bool "Baikal-T1 BFK3 board"
+
+    # Boot Controller support
+    select BE_BC
 
     # Hardware features
     select HW_HAS_PCI
@@ -174,6 +181,7 @@ bool "Baikal-T1 BFK2 board"
     # SPI bus support
     select SPI_DESIGNWARE
     select SPI_DW_MMIO
+    select SPI_DW_BOOT
 
     # USB Support
     select USB_DWC3
@@ -182,10 +190,13 @@ bool "Baikal-T1 BFK2 board"
     select USB_PHY
 
     # DTB select
-    select DTB_BAIKAL_BFK2
+    select DTB_BAIKAL_BFK3
 
 config MACH_BAIKAL_MODULE
 bool "Baikal-T Module board"
+
+    # Boot Controller support
+    select BE_BC
 
     # Hardware features
     select HW_HAS_PCI
@@ -242,6 +253,7 @@ bool "Baikal-T Module board"
     # SPI bus support
     select SPI_DESIGNWARE
     select SPI_DW_MMIO
+    select SPI_DW_BOOT
 
     # USB Support
     select USB_DWC3
@@ -257,6 +269,9 @@ help
 
 config MACH_BAIKAL_QEMU
 bool "Baikal-T QEMU simulator"
+
+    # Boot Controller support
+    select BE_BC
 
     # Errata set 
     select PAGE_SIZE_16KB
@@ -303,6 +318,7 @@ bool "Baikal-T QEMU simulator"
     # SPI bus support
     select SPI_DESIGNWARE
     select SPI_DW_MMIO
+    select SPI_DW_BOOT
 
     # DTB select
     select DTB_BAIKAL_QEMU
@@ -351,10 +367,10 @@ config DTB_BAIKAL_BFK
       Device tree for BFK boards (for versions 1.0, 1.5, 1.6)
       based on Baikal-T SOC.
 
-config DTB_BAIKAL_BFK2
-    bool "Baikal-T1 BFK2 board"
+config DTB_BAIKAL_BFK3
+    bool "Baikal-T1 BFK3 board"
     help
-      Device tree for BFK2 boards (for versions 2.x)
+      Device tree for BFK3 boards (for versions 2.0, 3.x)
       based on Baikal-T1 SOC.
 
 config DTB_BAIKAL_BFKX
@@ -388,7 +404,7 @@ config ARCH_NR_GPIO
     int "Baikal GPIOs plus architecture specific ones"
     range 32 512
     default 40 if MACH_BAIKAL_BFK
-    default 40 if MACH_BAIKAL_BFK2
+    default 40 if MACH_BAIKAL_BFK3
     default 48 if MACH_BAIKAL_MODULE
     default 32
     help
@@ -436,3 +452,8 @@ config SYS_HAS_CPU_MIPS32_R5
 config WDT_MIPS_GIC
     bool
     default n
+
+config BE_BC
+    tristate "boot controller"
+
+source "drivers/dma/baikal/Kconfig"

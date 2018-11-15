@@ -28,5 +28,6 @@ obj-$(CONFIG_EARLY_PRINTK)	+= baikal-console.o
 obj-$(CONFIG_OF)		+= baikal-of.o
 obj-$(CONFIG_CPU_FREQ)		+= baikal-cpufreq.o
 obj-$(CONFIG_WDT_MIPS_GIC)	+= baikal-wdt.o
+obj-$(CONFIG_BE_BC)		+= baikal-bc.o
 obj-$(CONFIG_KEXEC)		+= baikal-kexec.o
-obj-$(CONFIG_MACH_BAIKAL_BFK2)	+= baikal-efuse.o
+obj-$(CONFIG_MACH_BAIKAL_BFK3)	+= baikal-efuse.o
