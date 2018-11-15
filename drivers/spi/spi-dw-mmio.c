@@ -19,6 +19,7 @@
 #include <linux/of.h>
 #include <linux/of_gpio.h>
 #include <linux/of_platform.h>
+#include <linux/property.h>
 
 #include "spi-dw.h"
 
@@ -70,25 +71,15 @@ static int dw_spi_mmio_probe(struct platform_device *pdev)
 	if (ret)
 		return ret;
 
-	/* Dump DW component type */
-	ret = readl(dws->regs + DW_SPI_IDR);
-	dev_info(&pdev->dev, "Component ID: 0x%08X\n", ret);
+	dws->bus_num = of_alias_get_id(pdev->dev.of_node, "ssi");
 
-	/* Dump DW component version */
-	ret = readl(dws->regs + DW_SPI_VERSION);
-	dev_info(&pdev->dev, "Component Version: %c.%c%c\n",
-		(ret >> 24) & 0xff, (ret >> 16) & 0xff, (ret >> 8) & 0xff);
-
-	dws->bus_num =  of_alias_get_id(pdev->dev.of_node, "ssi");
-	if (dws->bus_num < 0)
-		dws->bus_num = 0;
- 
 	dws->max_freq = clk_get_rate(dwsmmio->clk);
+
+	device_property_read_u32(&pdev->dev, "reg-io-width", &dws->reg_io_width);
 
 	num_cs = 4;
 
-	if (pdev->dev.of_node)
-		of_property_read_u32(pdev->dev.of_node, "num-cs", &num_cs);
+	device_property_read_u32(&pdev->dev, "num-cs", &num_cs);
 
 	dws->num_cs = num_cs;
 
@@ -101,17 +92,14 @@ static int dw_spi_mmio_probe(struct platform_device *pdev)
 
 			if (cs_gpio == -EPROBE_DEFER) {
 				ret = cs_gpio;
-				continue;
-//				goto out;
+				goto out;
 			}
 
 			if (gpio_is_valid(cs_gpio)) {
 				ret = devm_gpio_request(&pdev->dev, cs_gpio,
 						dev_name(&pdev->dev));
 				if (ret)
-					continue;
-//
-//					goto out;
+					goto out;
 			}
 		}
 	}
@@ -132,12 +120,8 @@ static int dw_spi_mmio_remove(struct platform_device *pdev)
 {
 	struct dw_spi_mmio *dwsmmio = platform_get_drvdata(pdev);
 
-	clk_disable_unprepare(dwsmmio->clk);
 	dw_spi_remove_host(&dwsmmio->dws);
-	/* Clean IO remap region */
-	iounmap(dwsmmio->dws.regs);
-	/* Free memory */
-	kfree(dwsmmio);
+	clk_disable_unprepare(dwsmmio->clk);
 
 	return 0;
 }
@@ -160,5 +144,4 @@ module_platform_driver(dw_spi_mmio_driver);
 
 MODULE_AUTHOR("Jean-Hugues Deschenes <jean-hugues.deschenes@octasic.com>");
 MODULE_DESCRIPTION("Memory-mapped I/O interface driver for DW SPI Core");
-MODULE_ALIAS("platform:dw_spi_dt");
 MODULE_LICENSE("GPL v2");
