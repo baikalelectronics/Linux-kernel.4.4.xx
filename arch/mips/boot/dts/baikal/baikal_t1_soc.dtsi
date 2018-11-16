@@ -214,6 +214,11 @@
 			status = "disabled";
 		};
 
+		stmmac_axi_setup: stmmac-axi-config {
+			snps,wr_osr_lmt = <0x3>;
+			snps,rd_osr_lmt = <0x3>;
+		};
+
 		gmac0: eth1@1F05E000 {
 			compatible = "be,dwmac", "snps,dwmac-3.710", "snps,dwmac";
 			reg = <0x1F05E000 0x2000>;
@@ -230,6 +235,8 @@
 			txd2-skew-ps = <0>;
 			txd3-skew-ps = <0>;
 			txc-skew-ps  = <0xff>;
+			snps,pbl = <2>;
+			snps,axi-config = <&stmmac_axi_setup>;
 			status = "disabled";
 		};
 
@@ -249,6 +256,8 @@
 			txd2-skew-ps = <0>;
 			txd3-skew-ps = <0>;
 			txc-skew-ps  = <0xff>;
+			snps,pbl = <2>;
+			snps,axi-config = <&stmmac_axi_setup>;
 			status = "disabled";
 		};
 
