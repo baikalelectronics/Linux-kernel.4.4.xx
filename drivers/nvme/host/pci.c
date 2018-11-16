@@ -1583,7 +1583,7 @@ static int nvme_create_queue(struct nvme_queue *nvmeq, int qid)
 	nvmeq->cq_vector = qid - 1;
 	result = adapter_alloc_cq(dev, qid, nvmeq);
 	if (result < 0)
-		return result;
+		goto release_vector;
 
 	result = adapter_alloc_sq(dev, qid, nvmeq);
 	if (result < 0)
@@ -1597,9 +1597,12 @@ static int nvme_create_queue(struct nvme_queue *nvmeq, int qid)
 	return result;
 
  release_sq:
+	dev->online_queues--;
 	adapter_delete_sq(dev, qid);
  release_cq:
 	adapter_delete_cq(dev, qid);
+ release_vector:
+	nvmeq->cq_vector = -1;
 	return result;
 }
 
@@ -2685,9 +2688,6 @@ static int nvme_pci_enable(struct nvme_dev *dev)
 
 	if (pci_enable_device_mem(pdev))
 		return result;
-
-	if (pdev->irq == 0xff)
-		pdev->irq = 0;
 
 	dev->entry[0].vector = pdev->irq;
 	pci_set_master(pdev);
