@@ -217,6 +217,16 @@ static inline void spi_set_clk(struct dw_spi *dws, u16 div)
 	dw_writel(dws, DW_SPI_BAUDR, div);
 }
 
+static inline void spi_boot_enable_chip(struct dw_boot_spi *dws, int enable)
+{
+    dw_boot_writel(dws, DW_SPI_SSIENR, (enable ? 1 : 0));
+}
+
+static inline void spi_boot_set_clk(struct dw_boot_spi *dws, u16 div)
+{
+    dw_boot_writel(dws, DW_SPI_BAUDR, div);
+}
+
 /* Disable IRQ bits */
 static inline void spi_mask_intr(struct dw_spi *dws, u32 mask)
 {

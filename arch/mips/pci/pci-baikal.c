@@ -176,7 +176,7 @@ void dw_set_iatu_region(int dir, int index, int base_addr, int limit_addr, int t
 	wmb();	
 }
 
-#ifdef CONFIG_MACH_BAIKAL_BFK
+#ifdef CONFIG_MIPS_BAIKAL_T
 #define PLL_WAIT_RETRIES 1000
 static int dw_init_pll(const unsigned int pmu_register)
 {
@@ -204,7 +204,7 @@ static int dw_init_pll(const unsigned int pmu_register)
 
 	return OK;
 }
-#endif /* CONFIG_MACH_BAIKAL_BFK */
+#endif /* CONFIG_MIPS_BAIKAL_T */
 
 static int dw_pcie_init(void)
 {
@@ -214,11 +214,11 @@ static int dw_pcie_init(void)
 
 	/* PMU PCIe init. */
 
-#ifdef CONFIG_MACH_BAIKAL_BFK
+#ifdef CONFIG_MIPS_BAIKAL_T
 	/* Init PCIe PLL only for Baikal-T CPU  */
 	/* 2. Start BK_PMU_PCIEPLL_CTL. */
 	dw_init_pll(BK_PMU_PCIEPLL_CTL);
-#endif /* CONFIG_MACH_BAIKAL_BFK */
+#endif /* CONFIG_MIPS_BAIKAL_T */
 
 	/* 3. Read value of BK_PMU_AXI_PCIE_M_CTL, set EN bit. */
 	reg = READ_PMU_REG(BK_PMU_AXI_PCIE_M_CTL);
@@ -240,7 +240,7 @@ static int dw_pcie_init(void)
 	 * CORE_RST
 	 * NON_STICKY_RST
 	 */
-#ifndef CONFIG_MACH_BAIKAL_BFK 	/* we have Baikal-T1 chip, perform enhanced reset procedure */
+#ifdef CONFIG_MIPS_BAIKAL_T1 /* we have Baikal-T1 chip, perform enhanced reset procedure */
 	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
 	if ( reg & PMU_PCIE_RSTC_REQ_RESET ) {
 		/* PIPE_RESET */
@@ -369,7 +369,7 @@ static int dw_pcie_init(void)
 		PMU_PCIE_RSTC_CORE_RST|  PMU_PCIE_RSTC_PWR_RST |
 		PMU_PCIE_RSTC_STICKY_RST | PMU_PCIE_RSTC_NONSTICKY_RST);
 	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
-#endif /* CONFIG_MACH_BAIKAL_BFK */
+#endif /* CONFIG_MIPS_BAIKAL_T1 */
 
 	/* 3.1 Set DBI2 mode, dbi2_cs = 0x1 */
 	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);

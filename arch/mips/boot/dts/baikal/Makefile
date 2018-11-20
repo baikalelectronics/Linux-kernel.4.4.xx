@@ -3,7 +3,6 @@ dtb-$(CONFIG_DTB_BAIKAL_BFK3)	+= baikal_bfk3.dtb baikal_bfk2.dtb
 dtb-$(CONFIG_DTB_BAIKAL_BFKX)	+= baikal_bfkx.dtb
 dtb-$(CONFIG_DTB_BAIKAL_FPGA)	+= baikal_fpga.dtb
 dtb-$(CONFIG_DTB_BAIKAL_QEMU)	+= baikal_qemu.dtb
-dtb-$(CONFIG_DTB_BAIKAL_MODULE)	+= baikal_module.dtb
 
 
 dtb-$(CONFIG_DT_NONE)	+= \
@@ -11,8 +10,7 @@ dtb-$(CONFIG_DT_NONE)	+= \
 						baikal_bfk3.dtb	\
 						baikal_bfkx.dtb	\
 						baikal_fpga.dtb	\
-						baikal_qemu.dtb	\
-						baikal_module.dtb
+						baikal_qemu.dtb
 
 obj-y				+= $(patsubst %.dtb, %.dtb.o, $(dtb-y))
 

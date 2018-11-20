@@ -87,7 +87,6 @@
 };
 
 &spi0 {
-	reg-io-width = <4>;
 	num-cs = <2>;
 	cs-gpios = <&portb 0 GPIO_ACTIVE_LOW>,
 			   <&portb 1 GPIO_ACTIVE_LOW>;
@@ -118,7 +117,6 @@
 };
 
 &spi2 {
-	reg-io-width = <4>;
 	num-cs = <1>;
 	status = "okay";
 
@@ -133,23 +131,23 @@
 		/* total size 16MB */
 		part@0 {
 			label = "UBOOT";
-			reg = <0x0 0x80000>;
-		};
-		part@80000 {
-			label = "ENVSET";
-			reg = <0x80000 0x10000>;
-		};
-		part@90000 {
-			label = "FIRMWARE";
-			reg = <0x90000 0x10000>;
+			reg = <0x0 0xa0000>;
 		};
 		part@A0000 {
-			label = "FDT";
+			label = "ENVSET";
 			reg = <0xa0000 0x10000>;
 		};
 		part@B0000 {
+			label = "FIRMWARE";
+			reg = <0xb0000 0x10000>;
+		};
+		part@C0000 {
+			label = "FDT";
+			reg = <0xc0000 0x10000>;
+		};
+		part@D0000 {
 			label = "MULTIIMAGE";
-			reg = <0xb0000 0xf50000>;
+			reg = <0xd0000 0xf30000>;
 		};
 	};
 };

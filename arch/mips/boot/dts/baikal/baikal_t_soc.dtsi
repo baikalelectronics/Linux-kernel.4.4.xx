@@ -263,6 +263,22 @@
 			};
 		};
 
+		gpio3: gpio@1F045000 {
+			compatible = "snps,dw-apb-gpio";
+			reg = <0x1F045000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+
+			portb: gpio-controller@0 {
+				compatible = "snps,dw-apb-gpio-port";
+				#gpio-cells = <2>;
+				gpio-controller;
+				snps,nr-gpios = <3>;
+				reg = <0>;
+			};
+		};
+
 		i2c0: i2c0@1F046000 {
 			#address-cells = <1>;
 			#size-cells = <0>;

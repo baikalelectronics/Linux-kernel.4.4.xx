@@ -132,7 +132,7 @@ static void baikal_t1_pcie_link_speed_fixup(struct pci_dev *pdev)
 		width = (reg & PCI_EXP_LNKCAP_MLW) >> PCI_EXP_LNKSTA_NLW_SHIFT;
 		dev_info(&pdev->dev, "Link Capability is GEN%d, x%d\n", speed, width);
 		if (speed > PCI_EXP_LNKCAP_SLS_2_5GB) {
-#ifndef CONFIG_MACH_BAIKAL_BFK /* we have Baikal-T1 chip which can perform up to GEN3 */
+#ifdef CONFIG_MIPS_BAIKAL_T1 /* we have Baikal-T1 chip which can perform up to GEN3 */
 			target_speed = speed;
 #else /* we have Baikal-T chip which is limited to GEN2 */
 			target_speed = PCI_EXP_LNKCAP_SLS_5_0GB;

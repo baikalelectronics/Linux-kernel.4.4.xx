@@ -5,8 +5,7 @@
 config NET_VENDOR_BAIKAL
 	bool "Baikal Electronics SoC"
 	default y
-	depends on ARCH_BAIKAL || MIPS_BAIKAL || ARM64_BAIKAL || \
-		   ARM64 || MIPS
+	depends on MIPS_BAIKAL || ARM64_BAIKAL || ARM64 || MIPS
 	---help---
 	  If you have a Baikal Electronics SoC with network (Ethernet)
 	  controller say Y.

@@ -54,6 +54,13 @@
 		};
 	};
 
+	cpufreq: cpufreq@1F04D000 {
+		compatible = "be,cpufreq";
+		reg = <0x1F04D000 0x0008>;
+		clocks = <&cpu_clk 0>;
+		clock-names = "cpuclk";
+	};
+
 	gic_wdt: gic_wdt {
 		compatible = "be,gic-wdt";
 		interrupts = <GIC_LOCAL 0 IRQ_TYPE_NONE>;
@@ -394,6 +401,7 @@
 		spi0: spi0@1F04E000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
+			reg-io-width = <4>;
 			compatible = "snps,dw-apb-ssi", "snps,dw-spi";
 			reg = <0x1F04E000 0x1000>;
 			interrupts = <GIC_SHARED 40 IRQ_TYPE_LEVEL_HIGH>;
@@ -405,6 +413,7 @@
 		spi1: spi1@1F04F000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
+			reg-io-width = <4>;
 			compatible = "snps,dw-apb-ssi", "snps,dw-spi";
 			reg = <0x1F04F000 0x1000>;
 			interrupts = <GIC_SHARED 41 IRQ_TYPE_LEVEL_HIGH>;
@@ -416,6 +425,7 @@
 		spi2: spi2@1F040100 {
 			#address-cells = <1>;
 			#size-cells = <0>;
+			reg-io-width = <4>;
 			compatible = "snps,dw-spi-boot";
 			reg = <0x1F040100 0xF00>;
 			clocks = <&boot_clk 0>;

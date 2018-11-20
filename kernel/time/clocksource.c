@@ -794,6 +794,18 @@ void clocksource_change_rating(struct clocksource *cs, int rating)
 }
 EXPORT_SYMBOL(clocksource_change_rating);
 
+void __clocksource_change_freq(struct clocksource *cs, u32 rating, u32 freq)
+{
+	struct clocksource *best;
+
+	__clocksource_update_freq_hz(cs, freq);
+	clocksource_change_rating(cs, rating);
+	mutex_lock(&clocksource_mutex);
+	clocksource_select_fallback();
+	mutex_unlock(&clocksource_mutex);
+}
+EXPORT_SYMBOL_GPL(__clocksource_change_freq);
+
 /*
  * Unbind clocksource @cs. Called with clocksource_mutex held
  */

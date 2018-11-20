@@ -36,13 +36,13 @@
 #define DRIVER_NAME "dw_spi_boot"
 #define SPI_DW_BOOT_LOWLEVEL_DEBUG 0
 
-static void spi_clean(struct dw_spi *dws)
+static void spi_clean(struct dw_boot_spi *dws)
 {
     dw_boot_writel(dws, DW_SPI_SER, 0);
     dw_boot_writel(dws, DW_SPI_SSIENR, 0);
 }
 
-static void spi_set_mode (struct dw_spi *dws, int mode)
+static void spi_set_mode (struct dw_boot_spi *dws, int mode)
 {
     struct {
         uint32_t  dfs    :4;    /* data frame size */
@@ -64,12 +64,12 @@ static void spi_set_mode (struct dw_spi *dws, int mode)
 
 
 static int boot_spi_write(struct spi_master *master, int chip_select,
-    const uint8_t* tx1, uint8_t* tx2, int len1, int len2)
+    const uint8_t* tx1, const uint8_t* tx2, int len1, int len2)
 {
     struct dw_boot_spi *dws;
     int i, n1, n2;
-    int end1 = (int)tx1 + len1;
-    int end2 = (int)tx2 + len2;
+    const uint8_t* end1 = tx1 + len1;
+    const uint8_t* end2 = tx2 + len2;
 
     DEFINE_SPINLOCK(mLock);
     unsigned long flags;
@@ -115,7 +115,8 @@ static int boot_spi_write(struct spi_master *master, int chip_select,
 static int boot_spi_read(struct spi_master *master, int chip_select,
     const uint8_t* tx, uint8_t* rx, int lentx, int lenrx)
 {
-    int i, rxend = rx + lenrx;
+    int i;
+    uint8_t* const rxend = rx + lenrx;
     struct dw_boot_spi *dws;
 
     DEFINE_SPINLOCK(mLock);
@@ -249,7 +250,9 @@ static int boot_spi_transfer_one_message(struct spi_master *master, struct spi_m
 
     list_for_each_entry(pos, head, transfer_list)
     {
-        void *out1 = 0, *out2 = 0, *in = 0;
+        const void *out1 = 0;
+        const void *out2 = 0;
+        void *in = 0;
         int len1 = 0, len2 = 0, len3 = 0;
 
         char cmd = *(char*) pos->tx_buf;
@@ -476,8 +479,8 @@ static int remove(struct platform_device *pdev)
     struct dw_boot_spi *dws = platform_get_drvdata(pdev);
 
     clk_disable_unprepare(dws->clk);
-    spi_enable_chip(dws, 0);
-    spi_set_clk(dws, 0);
+    spi_boot_enable_chip(dws, 0);
+    spi_boot_set_clk(dws, 0);
     return 0;
 }
 

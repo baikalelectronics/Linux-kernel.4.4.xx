@@ -111,8 +111,6 @@ void __init prom_init(void)
 #ifdef CONFIG_EARLY_PRINTK_8250
 	setup_8250_early_printk_port(KSEG1ADDR(BAIKAL_UART0_START), 2, 1000000);
 #endif
-	/* Setup power management handlers */
-	panic_timeout	 = 10;
 
 	/* Setup exception handlers */
 	board_nmi_handler_setup = mips_nmi_setup;
