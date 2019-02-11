@@ -1387,6 +1387,10 @@ static int mmc_spi_probe(struct spi_device *spi)
 	if (!host->data)
 		goto fail_nobuf1;
 
+#ifdef CONFIG_MACH_BAIKAL_BFK3
+	spi->master->dev.parent->dma_mask = 0;
+#endif
+
 	if (spi->master->dev.parent->dma_mask) {
 		struct device	*dev = spi->master->dev.parent;
 

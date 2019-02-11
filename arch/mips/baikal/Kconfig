@@ -1,8 +1,8 @@
-# 
+#
 # Baikal-T/T1 SOC platform support code.
 #
 # Copyright (C) 2014-2017 Baikal Electronics JSC
-# 
+#
 # Authors:
 # Dmitry Dunaev <dmitry.dunaev@baikalelectronics.com>
 # Alexander Sazonov <Alexander.Sazonov@baikalelectronics.ru>
@@ -152,6 +152,11 @@ config MACH_BAIKAL_BFK3
 
     # DTB select
     select DTB_BAIKAL_BFK3
+
+    # MMC
+    select MMC
+    select MMC_SPI
+
 
 config MACH_BAIKAL_QEMU
     bool "Baikal-T QEMU simulator"
