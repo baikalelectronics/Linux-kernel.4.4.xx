@@ -33,8 +33,8 @@
 
 static struct resource dw_mem_resource = {
 	.name	= "DW PCI MEM",
-	.start	= PHYS_PCIMEM_BASE_ADDR,
-	.end	= PHYS_PCIMEM_LIMIT_ADDR,
+	.start	= PCI_BUS_PHYS_PCIMEM_BASE_ADDR,
+	.end	= PCI_BUS_PHYS_PCIMEM_LIMIT_ADDR,
 	.flags	= IORESOURCE_MEM,
 };
 
@@ -545,10 +545,10 @@ static int dw_pcie_init(void)
 				PHYS_PCI_RD1_LIMIT_ADDR >> 16, 0x0000, TLP_TYPE_CFGRD1);
 
 	dw_set_iatu_region(REGION_DIR_OUTBOUND, IATU_MEM_INDEX, PHYS_PCIMEM_BASE_ADDR >> 16,
-				PHYS_PCIMEM_LIMIT_ADDR >> 16, PHYS_PCIMEM_BASE_ADDR >> 16, TLP_TYPE_MEM);
+				PHYS_PCIMEM_LIMIT_ADDR >> 16, (PCI_BUS_PHYS_PCIMEM_BASE_ADDR) >> 16, TLP_TYPE_MEM);
 
 	dw_set_iatu_region(REGION_DIR_OUTBOUND, IATU_IO_INDEX, PHYS_PCIIO_BASE_ADDR >> 16,
-				PHYS_PCIIO_LIMIT_ADDR >> 16, PHYS_PCIIO_BASE_ADDR >> 16,  TLP_TYPE_IO);
+				PHYS_PCIIO_LIMIT_ADDR >> 16, PHYS_PCIIO_BASE_ADDR >> 16, TLP_TYPE_IO);
 
 	/*
 	 * Set GEN1 speed. In case EP supports GEN2
@@ -589,12 +589,16 @@ static int dw_pcie_init(void)
 		}
 	}
 
-	pr_err("%s: PCIe error code = 0x%x\n", __func__, st);
 
-	/* Check the speed is set in PCIE_LINK_CONTROL_LINK_STATUS_REG. */
-	reg = READ_PCIE_REG(PCIE_LINK_CONTROL_LINK_STATUS_REG);
-	reg = ((reg & PCIE_CAP_LINK_SPEED_MASK) >> PCIE_CAP_LINK_SPEED_SHIFT);
-	pr_info("%s: PCIe link speed GEN%d\n", __func__, reg);
+	if (!st) {
+		/* Check the speed is set in PCIE_LINK_CONTROL_LINK_STATUS_REG. */
+		reg = READ_PCIE_REG(PCIE_LINK_CONTROL_LINK_STATUS_REG);
+		pr_info("%s: PCIe link speed GEN%d x%d\n", __func__,
+			((reg & PCIE_CAP_LINK_SPEED_MASK) >> PCIE_CAP_LINK_SPEED_SHIFT),
+			((reg & PCIE_STA_LINK_WIDTH_MASK) >> PCIE_STA_LINK_WIDTH_SHIFT));
+	} else {
+		pr_err("%s: PCIe error code = 0x%x\n", __func__, st);
+	}
 
 	wmb();
 

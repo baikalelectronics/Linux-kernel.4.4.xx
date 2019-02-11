@@ -1,7 +1,7 @@
 /*
  *  Baikal-T SOC platform support code.
  *
- *  Copyright (C) 2015 Baikal Electronics.
+ *  Copyright (C) 2015-2018 Baikal Electronics.
  *
  *  This program is free software; you can distribute it and/or modify it
  *  under the terms of the GNU General Public License (Version 2) as
@@ -23,6 +23,7 @@
 #define __PCI_BAIKAL_H__
 
 #include <linux/interrupt.h>
+#include <asm/mach-baikal/pci-t1.h>
 
 /* Define DW_CHECK_ECRC to add checking CRC. */
 //#define DW_CHECK_ECRC
@@ -33,40 +34,8 @@
  * directly connected to the RC and has bus number 0 */
 #define PCIE_ROOT_BUS_NUM      1
 
-#define	PHYS_PCIMEM_BASE_ADDR		(0x08000000)
-#define	PHYS_PCIMEM_LIMIT_ADDR		(0x18000000 - 1)
-#define IATU_MEM_INDEX			2
-
-#define	PHYS_PCI_RD0_BASE_ADDR		(0x18000000)
-#ifdef CONFIG_PCI_ECAM
-#define	PHYS_PCI_RD0_LIMIT_ADDR		(0x18200000 - 1)
-#else
-#define	PHYS_PCI_RD0_LIMIT_ADDR		(0x18010000 - 1)
-#endif /* CONFIG_PCI_ECAM */
 #define PCI_RD0_BASE_ADDR		KSEG1ADDR(PHYS_PCI_RD0_BASE_ADDR)
-#define IATU_RD0_INDEX			0
-
-#ifdef CONFIG_PCI_ECAM
-#define	PHYS_PCI_RD1_BASE_ADDR		(0x18200000)
-#define	PHYS_PCI_RD1_LIMIT_ADDR		(0x1B100000 - 1)
-#else
-#define	PHYS_PCI_RD1_BASE_ADDR		(0x18010000)
-#define	PHYS_PCI_RD1_LIMIT_ADDR		(0x18020000 - 1)
-#endif /* CONFIG_PCI_ECAM */
 #define PCI_RD1_BASE_ADDR		KSEG1ADDR(PHYS_PCI_RD1_BASE_ADDR)
-#define IATU_RD1_INDEX			1
-
-#ifdef CONFIG_PCI_ECAM
-#define	PHYS_PCIIO_BASE_ADDR		0x18B10000
-#else
-#define	PHYS_PCIIO_BASE_ADDR		0x18020000
-#endif /* CONFIG_PCI_ECAM */
-#define	PHYS_PCIIO_LIMIT_ADDR		(0x1BDB0000 - 1)
-#define IATU_IO_INDEX			3
-
-#define	PHYS_PCI_MSI_BASE_ADDR		(0x1BDB0000)
-#define	PHYS_PCI_START_ADDR		(0x08000000)
-#define	PHYS_PCI_END_ADDR		(0x1BDC0000)
 
 #define PCIE_TYPE1_DEV_ID_VEND_ID_REG		(0x0)	/* Device ID and Vendor ID Register. */
 #define PCIE_TYPE1_STATUS_COMMAND_REG		(0x4)	/* Command and Status Register. */

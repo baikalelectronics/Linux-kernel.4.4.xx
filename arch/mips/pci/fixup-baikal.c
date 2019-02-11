@@ -232,3 +232,32 @@ int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
 {
 	return of_irq_parse_and_map_pci(dev, slot, pin);
 }
+
+
+static void quirk_remap_bar_pci_to_paddr(struct pci_dev *dev)
+{
+	int i;
+
+	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
+		struct resource *r = &dev->resource[i];
+
+		if (r->flags & IORESOURCE_MEM && resource_size(r) > 0) {
+			r->start = BAIKAL_MAP_PCI_BUS_TO_PADDR(r->start);
+			r->end = BAIKAL_MAP_PCI_BUS_TO_PADDR(r->end);
+			dev_info(&dev->dev, "BAR %d: remapped %pR", i, r);
+		}
+	}
+}
+
+static void quirk_fix_pci_irq(struct pci_dev *dev)
+{
+	if (dev->irq == 0xff) {
+		dev->irq = 0;
+	}
+	dev_info(&dev->dev,"quirk irq: %d\n", dev->irq);
+
+}
+
+
+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_remap_bar_pci_to_paddr);
+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_fix_pci_irq);
