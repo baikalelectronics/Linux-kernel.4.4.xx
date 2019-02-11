@@ -113,6 +113,7 @@ config BAIKAL_T_COMMON
     select SPI_DESIGNWARE
     select SPI_DW_MMIO
     select SPI_DW_BOOT
+    select SPI_DW_MMIO_DMA
 
     # USB Support
     select USB_DWC3

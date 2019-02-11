@@ -111,14 +111,14 @@
 			compatible = "snps,dma-spear1340";
 			reg = <0x1f041000 0x1000>;
 			interrupts = <GIC_SHARED 56 IRQ_TYPE_LEVEL_HIGH>;
-			dma-channels = <8>;
+			dma-channels = <2>;
 			dma-requests = <16>;
 			dma-masters = <2>;
 			#dma-cells = <3>;
 			chan_allocation_order = <1>;
 			chan_priority = <1>;
 			block_size = <0xfff>;
-			data_width = <3 3 0 0>;
+			data_width = <0 0 0 0>;
 			clocks = <&dma_clk 0>;
 			clock-names = "hclk";
 		};
@@ -402,24 +402,34 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 			reg-io-width = <4>;
-			compatible = "snps,dw-apb-ssi", "snps,dw-spi";
 			reg = <0x1F04E000 0x1000>;
 			interrupts = <GIC_SHARED 40 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&spi0_clk 0>;
 			clock-names = "spi0clk";
 			status = "disabled";
+
+			compatible = "snps,dw-apb-ssi-dma", "snps,dw-spi";
+			dmas =
+				<&dma 8 0 1>,  /* tx, mem2dev, (dst id = 8) (src master = 0,1) (dst master = 0,1) */
+				<&dma 9 1 0>;  /* rx, dev2mem, (src id = 9) (src master = 0,1) (dst master = 0,1) */
+			dma-names = "tx", "rx";
 		};
 
 		spi1: spi1@1F04F000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
 			reg-io-width = <4>;
-			compatible = "snps,dw-apb-ssi", "snps,dw-spi";
 			reg = <0x1F04F000 0x1000>;
 			interrupts = <GIC_SHARED 41 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&spi1_clk 0>;
 			clock-names = "spi1clk";
 			status = "disabled";
+
+			compatible = "snps,dw-apb-ssi-dma", "snps,dw-spi";
+			dmas =
+				<&dma 10 0 1>,  /* tx, mem2dev, (dst id = 10) (src master = 0,1) (dst master = 0,1) */
+				<&dma 11 1 0>;  /* rx, dev2mem, (src id = 11) (src master = 0,1) (dst master = 0,1) */
+			dma-names = "tx", "rx";
 		};
 
 		spi2: spi2@1F040100 {
@@ -432,6 +442,7 @@
 			clock-names = "bootclk";
 			status = "disabled";
 			/* no interrupts */
+			/* no dma */
 		};
 
 		apb_ehb@1F059000 {
