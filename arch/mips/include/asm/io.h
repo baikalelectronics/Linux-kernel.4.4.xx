@@ -31,6 +31,10 @@
 #include <ioremap.h>
 #include <mangle-port.h>
 
+#ifdef CONFIG_MIPS_BAIKAL
+#include <asm/mach-baikal/baikal_io.h>
+#endif /* CONFIG_MIPS_BAIKAL */
+
 /*
  * Slowdown I/O port space accesses for antique hardware.
  */
@@ -429,7 +433,11 @@ __BUILD_MEMORY_PFX(__mem_, bwlq, type)					\
 BUILDIO_MEM(b, u8)
 BUILDIO_MEM(w, u16)
 BUILDIO_MEM(l, u32)
+#ifdef CONFIG_MIPS_BAIKAL
+BUILDIO_MEM_BE(q, u64)
+#else
 BUILDIO_MEM(q, u64)
+#endif /* CONFIG_MIPS_BAIKAL */
 
 #define __BUILD_IOPORT_PFX(bus, bwlq, type)				\
 	__BUILD_IOPORT_SINGLE(bus, bwlq, type, ,)			\
