@@ -146,7 +146,7 @@
 			clocks = <&eth_pll 0>;
 			clock-names = "ethpll";
 			#clock-cells = <1>;
-			clock-div = <5>;
+			clock-div = <10>;
 			clock-mult = <1>;
 			clock-output-names = "div125m";
 		};
@@ -156,7 +156,7 @@
 			clocks = <&eth_pll 0>;
 			clock-names = "ethpll";
 			#clock-cells = <1>;
-			clock-div = <4>;
+			clock-div = <8>;
 			clock-mult = <1>;
 			clock-output-names = "div156m";
 		};
@@ -345,7 +345,7 @@
 			clocks = <&div_156m 0>;
 			clock-names = "div156m";
 			#clock-cells = <0>;
-			clock-div = <4>;
+			clock-div = <1>;
 			clock-mult = <1>;
 			clock-output-names = "xgmacptp";
 			clock-output = "ptp_clk";
