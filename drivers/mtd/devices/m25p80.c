@@ -82,6 +82,11 @@ static void m25p80_write(struct spi_nor *nor, loff_t to, size_t len,
 	struct spi_message m;
 	int cmd_sz = m25p_cmdsz(nor);
 
+	uint8_t* local_buf = kmalloc(max(32, len), GFP_KERNEL | GFP_DMA);
+	if(!local_buf)
+		return;
+	memcpy(local_buf, buf, len);
+
 	spi_message_init(&m);
 
 	if (nor->program_opcode == SPINOR_OP_AAI_WP && nor->sst_write_second)
@@ -94,13 +99,14 @@ static void m25p80_write(struct spi_nor *nor, loff_t to, size_t len,
 	t[0].len = cmd_sz;
 	spi_message_add_tail(&t[0], &m);
 
-	t[1].tx_buf = buf;
+	t[1].tx_buf = local_buf;
 	t[1].len = len;
 	spi_message_add_tail(&t[1], &m);
 
 	spi_sync(spi, &m);
 
 	*retlen += m.actual_length - cmd_sz;
+	kfree(local_buf);
 }
 
 static inline unsigned int m25p80_rx_nbits(struct spi_nor *nor)
@@ -128,6 +134,10 @@ static int m25p80_read(struct spi_nor *nor, loff_t from, size_t len,
 	struct spi_message m;
 	unsigned int dummy = nor->read_dummy;
 
+	uint8_t* local_buf = kmalloc(max(32, len), GFP_KERNEL | GFP_DMA);
+	if(!local_buf)
+		return -ENOMEM;
+
 	/* convert the dummy cycles to the number of bytes */
 	dummy /= 8;
 
@@ -141,7 +151,7 @@ static int m25p80_read(struct spi_nor *nor, loff_t from, size_t len,
 	t[0].len = m25p_cmdsz(nor) + dummy;
 	spi_message_add_tail(&t[0], &m);
 
-	t[1].rx_buf = buf;
+	t[1].rx_buf = local_buf;
 	t[1].rx_nbits = m25p80_rx_nbits(nor);
 	t[1].len = len;
 	spi_message_add_tail(&t[1], &m);
@@ -149,6 +159,8 @@ static int m25p80_read(struct spi_nor *nor, loff_t from, size_t len,
 	spi_sync(spi, &m);
 
 	*retlen = m.actual_length - m25p_cmdsz(nor) - dummy;
+	memcpy(buf, local_buf, len);
+	kfree(local_buf);
 	return 0;
 }
 

@@ -295,7 +295,7 @@ static int dw_spi_transfer_one(struct spi_master *master,
 
 	dws->tx = (void *)transfer->tx_buf;
 	dws->tx_end = dws->tx + transfer->len;
-	dws->rx = transfer->rx_buf;
+	dws->rx = (void *)transfer->rx_buf;
 	dws->rx_end = dws->rx + transfer->len;
 	dws->len = transfer->len;
 

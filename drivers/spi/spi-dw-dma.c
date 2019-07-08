@@ -12,9 +12,11 @@
 #include <linux/delay.h>
 
 
+#define DESC_DATA_SIZE   (4*1024)
 #define RX_BUSY     0
 #define TX_BUSY     1
 
+static int transfer (struct dw_spi *dws, struct spi_transfer *xfer);
 
 static int spi_check_status (struct dw_spi *dws)
 {
@@ -50,11 +52,13 @@ static enum dma_slave_buswidth convert_dma_width (u32 dma_width)
 
 static void spi_wait_status(struct dw_spi *dws)
 {
-	/* wait */
-	int try = 100000;
-	while(spi_check_status(dws) && try--){
+	/*
+	time(freg) = len*8/freq
+	time(8k) = len*8/8k = len/1k [sec] = len*1000 [us]
+	*/
+	long int us = dws->len * 1000;
+	while (spi_check_status(dws) && us--)
 		udelay(1);
-	}
 }
 
 static void tx_done (void *arg)
@@ -77,17 +81,27 @@ static void rx_done (void *arg)
 
 	struct dw_spi *dws = arg;
 	spi_wait_status(dws);
-	clear_bit(RX_BUSY, &dws->dma_chan_busy);
-	if (test_bit(TX_BUSY, &dws->dma_chan_busy))
-		return;
-	spi_finalize_current_transfer(dws->master);
+
+	size_t len = min(dws->len, DESC_DATA_SIZE);
+	dws->len -= len;
+	dws->rx  += len;
+
+	if(!dws->len){
+		clear_bit(RX_BUSY, &dws->dma_chan_busy);
+		if (test_bit(TX_BUSY, &dws->dma_chan_busy))
+			return;
+		spi_finalize_current_transfer(dws->master);
+	}else{
+		/* next part */
+		transfer(dws, NULL);   //xfer = null, because not used
+	}
 }
 
 static struct dma_async_tx_descriptor *prepare_tx (
 	struct dw_spi       *dws,
 	struct spi_transfer *xfer)
 {
-	if (!xfer->tx_buf)
+	if (!dws->tx)
 		return NULL;
 
 
@@ -103,18 +117,18 @@ static struct dma_async_tx_descriptor *prepare_tx (
 
 	config.dst_addr_width = DMA_SLAVE_BUSWIDTH_1_BYTE;
 	config.dst_maxburst   = dws->fifo_len/2;
-	config.dst_addr       = dws->dma_addr & 0x1FFFFFFF;
+	config.dst_addr       = CPHYSADDR(dws->dma_addr);
 
 	dmaengine_slave_config(dws->txchan, &config);
 
 	/* descriptor */
 	struct dma_async_tx_descriptor *desc;
 	desc = dmaengine_prep_slave_single(
-		dws->txchan,					// chan
-		(void*)((int)xfer->tx_buf & 0x1FFFFFFF),	// buf
-		xfer->len,					// len
-		DMA_MEM_TO_DEV,					// dir
-		DMA_PREP_INTERRUPT | DMA_CTRL_ACK);		// flags
+		dws->txchan,				// chan
+		CPHYSADDR(dws->tx),			// dws->tx, buf_tx
+		dws->len,				// len
+		DMA_MEM_TO_DEV,				// dir
+		DMA_PREP_INTERRUPT | DMA_CTRL_ACK);	// flags
 	if (!desc)
 		return NULL;
 
@@ -129,7 +143,7 @@ static struct dma_async_tx_descriptor *prepare_rx (
 	struct dw_spi       *dws,
 	struct spi_transfer *xfer)
 {
-	if (!xfer->rx_buf)
+	if (!dws->rx)
 		return NULL;
 
 	/* slave config */
@@ -140,7 +154,7 @@ static struct dma_async_tx_descriptor *prepare_rx (
 
 	config.src_addr_width = DMA_SLAVE_BUSWIDTH_1_BYTE;
 	config.src_maxburst   = dws->fifo_len/2;
-	config.src_addr       = dws->dma_addr & 0x1FFFFFFF;
+	config.src_addr       = CPHYSADDR(dws->dma_addr);
 
 	config.dst_addr_width = DMA_SLAVE_BUSWIDTH_1_BYTE;
 	config.dst_maxburst   = dws->fifo_len/2;
@@ -148,15 +162,19 @@ static struct dma_async_tx_descriptor *prepare_rx (
 
 	dmaengine_slave_config(dws->rxchan, &config);
 
+	size_t len = min(dws->len,DESC_DATA_SIZE);
+	spi_enable_chip(dws, 0);
+	dw_writel(dws, DW_SPI_CTRL1, len-1);
+	spi_enable_chip(dws, 1);
 
 	/* descriptor */
 	struct dma_async_tx_descriptor *desc;
 	desc = dmaengine_prep_slave_single(
-		dws->rxchan,					// chan
-		(void*)((int)xfer->rx_buf & 0x1FFFFFFF),	// buf
-		xfer->len,					// len
-		DMA_DEV_TO_MEM,					// dir
-		DMA_PREP_INTERRUPT | DMA_CTRL_ACK);		// flags
+		dws->rxchan,				// chan
+		CPHYSADDR(dws->rx),			// dws->rx, buf_rx
+		len,					// len
+		DMA_DEV_TO_MEM,				// dir
+		DMA_PREP_INTERRUPT | DMA_CTRL_ACK);	// flags
 	if (!desc)
 		return NULL;
 
@@ -208,61 +226,41 @@ static bool can (
 	struct spi_device *spi,
 	struct spi_transfer *xfer)
 {
-	/*
-	// todo: use this
 	struct dw_spi *dws = spi_master_get_devdata(master);
-	return (dws->dma_inited) && (xfer->len > 256);
-	*/
-
-	return 1;
+	return (dws->dma_inited) && (xfer->len > dws->fifo_len);
 }
 
 static int setup (struct dw_spi *dws, struct spi_transfer *xfer)
 {
 	/* clear */
-	// todo: dont clean all regs
-	dw_writel(dws, DW_SPI_IMR,    0);
-	dw_writel(dws, DW_SPI_RXFLTR, 0);
-	dw_writel(dws, DW_SPI_TXFLTR, 0);
-	dw_writel(dws, DW_SPI_TXFLR,  0);
-	dw_writel(dws, DW_SPI_RXFLR,  0);
-	dw_writel(dws, DW_SPI_SER,    0);
-	dw_writel(dws, DW_SPI_CTRL1,  0);
-	dw_writel(dws, DW_SPI_DMACR,  0);
-	dw_writel(dws, DW_SPI_DMATDLR,0);
-	dw_writel(dws, DW_SPI_DMATDLR,0);
+	dw_writel(dws, DW_SPI_SER, 0);
 
 	/* MODE */
-	u32 cr0;
-	u32 tmode;
+	uint32_t tmode;
+	if (dws->rx && dws->tx)
+		tmode = SPI_TMOD_TR;
+	else if (dws->rx)
+		tmode = SPI_TMOD_RO;
+	else
+		tmode = SPI_TMOD_TO;
 
-	if (dws->rx && dws->tx)	tmode = SPI_TMOD_TR;
-	else if (dws->rx)	    tmode = SPI_TMOD_RO;
-	else			        tmode = SPI_TMOD_TO;
-
+	/* CTRL0 */
+	uint32_t cr0;
 	cr0 = dw_readl(dws, DW_SPI_CTRL0);
 	cr0 &= ~SPI_TMOD_MASK;
 	cr0 |= (tmode << SPI_TMOD_OFFSET);
 	dw_writel(dws, DW_SPI_CTRL0, cr0);
 
-	/* SIZE */
-	if (!dws->tx && dws->rx) {
-		if(dws->len > 64*1024)
-			return -1;
-		dw_writel(dws, DW_SPI_CTRL1, dws->len-1);
-	}
-
 	/* DMATDLR */
+	dw_writel(dws, DW_SPI_DMATDLR, dws->fifo_len/2);
+	dw_writel(dws, DW_SPI_DMARDLR, dws->fifo_len/2 -1);
+
 	/* DMACR */
-	u16 dma_ctrl = 0;
-	if (dws->tx) {
+	uint16_t dma_ctrl = 0;
+	if(dws->tx)
 		dma_ctrl |= SPI_DMA_TDMAE;
-		dw_writel(dws, DW_SPI_DMATDLR, dws->fifo_len/2);
-	}
-	if (dws->rx) {
+	if(dws->rx)
 		dma_ctrl |= SPI_DMA_RDMAE;
-		dw_writel(dws, DW_SPI_DMARDLR, dws->fifo_len/2 -1);
-	}
 	dw_writel(dws, DW_SPI_DMACR, dma_ctrl);
 
 	return 0;
