@@ -1034,7 +1034,7 @@ static int ep_poll_callback(wait_queue_t *wait, unsigned mode, int sync, void *k
 	 * semantics). All the events that happen during that period of time are
 	 * chained in ep->ovflist and requeued later on.
 	 */
-	if (unlikely(ep->ovflist != EP_UNACTIVE_PTR)) {
+	if (ep->ovflist != EP_UNACTIVE_PTR) {
 		if (epi->next == EP_UNACTIVE_PTR) {
 			epi->next = ep->ovflist;
 			ep->ovflist = epi;
@@ -1838,13 +1838,6 @@ SYSCALL_DEFINE4(epoll_ctl, int, epfd, int, op, int, fd,
 	struct epitem *epi;
 	struct epoll_event epds;
 	struct eventpoll *tep = NULL;
-
-#if CONFIG_MIPS_BAIKAL
-/* Temporary fix for Baikal CPU branch, TODO ... */
-#warning temporary fix: epoll_event * is checked to be not null
-	if (op != EPOLL_CTL_DEL && !event)
-		return -EFAULT;
-#endif
 
 	error = -EFAULT;
 	if (ep_op_has_event(op) &&
