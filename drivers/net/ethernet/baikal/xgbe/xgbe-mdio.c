@@ -287,8 +287,6 @@ static int be_xgbe_phy_config_init(struct xgbe_prv_data *pdata)
 		ret &= ~(VR_XS_PMA_MII_Gen5_MPLL_CTRL_REF_CLK_SEL_bit);
 		XMDIO_WRITE(pdata, MDIO_MMD_PMAPMD, VR_XS_PMA_MII_Gen5_MPLL_CTRL, ret);
 		wmb();
-		/* Turn off internal XGMAC PHY clock */
-		clk_disable_unprepare(pdata->sysclk);
 	}
 
 	/* Make vendor specific soft reset */

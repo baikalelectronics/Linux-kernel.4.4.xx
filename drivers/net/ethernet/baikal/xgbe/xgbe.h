@@ -446,8 +446,7 @@ struct xgbe_channel {
 	char rx_dma_irq_name[IFNAMSIZ + 32];
 
 	/* Netdev related settings */
-	struct napi_struct napi_tx;
-	struct napi_struct napi_rx;
+	struct napi_struct napi;
 
 	unsigned int saved_ier;
 
