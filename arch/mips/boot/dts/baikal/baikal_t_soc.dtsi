@@ -57,7 +57,6 @@
 	gic_wdt: gic_wdt {
 		compatible = "be,gic-wdt";
 		interrupts = <GIC_LOCAL 0 IRQ_TYPE_NONE>;
-		clock-frequency = <600000000>;
 		clocks = <&gic_clk 0>;
 		clock-names = "gicclk";
 	};
@@ -71,7 +70,6 @@
 		timer:timer {
 			compatible = "mti,gic-timer";
 			interrupts = <GIC_LOCAL 1 IRQ_TYPE_NONE>;
-			clock-frequency = <600000000>;
 			clocks = <&gic_clk 0>;
 			clock-names = "gicclk";
 		};
