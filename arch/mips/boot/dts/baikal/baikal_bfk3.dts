@@ -99,7 +99,7 @@
 		status = "okay";
 		compatible = "micron,n25q256a", "jedec,spi-nor";
 		reg = <1>;
-		spi-max-frequency = <25000000>;
+		spi-max-frequency = <12500000>;
 		/* m25p,fast-read; */
 
 		mtd@00000000 {
