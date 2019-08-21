@@ -234,6 +234,7 @@ static int setup (struct dw_spi *dws, struct spi_transfer *xfer)
 {
 	/* clear */
 	dw_writel(dws, DW_SPI_SER, 0);
+	dw_writel(dws, DW_SPI_DMACR, 0);
 
 	/* MODE */
 	uint32_t tmode;
