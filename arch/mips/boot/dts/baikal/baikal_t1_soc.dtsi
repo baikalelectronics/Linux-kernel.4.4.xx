@@ -213,7 +213,7 @@
 			be,external-clock;
 			phy-mode = "xgmii";
 			be,speed-set = <1>;
-			be,mode-set = <0>;
+			be,pcs-mode = "KR";
 			mac-address = [ 00 20 13 ba 1c a1 ];
 			local-mac-address = [ 00 20 13 ba 1c a1 ];
 			status = "disabled";

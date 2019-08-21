@@ -31,32 +31,32 @@
 			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
 			reg = <0x0C>;
 			phy-mode = "xgmii";
-			mv,line-mode = <0>; /* 10GBASE-R (0x71) */
-			mv,host-mode = <0>; /* 10GBASE-R (0x71) */
+			mv,line-mode = "KR";
+	        mv,host-mode = "KR";
 		};
 
 		mv_ch1:88X2222@0D {
-			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
+		compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
 			reg = <0x0D>;
 			phy-mode = "xgmii";
-			mv,line-mode = <0>; /* 10GBASE-R (0x71) */
-			mv,host-mode = <0>; /* 10GBASE-R (0x71) */
+			mv,line-mode = "KR";
+			mv,host-mode = "KR";
 		};
 
 		mv_ch2:88X2222@0E {
 			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
 			reg = <0x0E>;
 			phy-mode = "xgmii";
-			mv,line-mode = <0>; /* 10GBASE-R (0x71) */
-			mv,host-mode = <0>; /* 10GBASE-R (0x71) */
+			mv,line-mode = "KR";
+			mv,host-mode = "KR";
 		};
 
 		mv_ch3:88X2222@0F {
 			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
 			reg = <0x0F>;
 			phy-mode = "xgmii";
-			mv,line-mode = <0>; /* 10GBASE-R (0x71) */
-			mv,host-mode = <0>; /* 10GBASE-R (0x71) */
+			mv,line-mode = "KR";
+			mv,host-mode = "KR";
 		};
 	};
 };

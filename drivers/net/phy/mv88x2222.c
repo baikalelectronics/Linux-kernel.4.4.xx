@@ -107,7 +107,7 @@ MODULE_LICENSE("Proprinetary");
 #define MV_DEV_10GBW_IRQ_STATUS			0x8001
 #define MV_DEV_10GBW_IRQ_REALTIME		0x8002
 
-#define MV_DEV_10GBR_ANEG			0x2000
+#define MV_DEV_10GBR_ANEG               0x2000
 #define MV_DEV_10GBR_IRQ_ENABLE			0x8000
 #define MV_DEV_10GBR_IRQ_STATUS			0x8001
 #define MV_DEV_10GBR_IRQ_REALTIME		0x8002
@@ -131,31 +131,37 @@ MODULE_LICENSE("Proprinetary");
 
 #define MV_RESET_DELAY_US			500
 
-static const unsigned int mv_modes_line[] =
+struct mode
 {
-	MV_MODE_LINE_10GBR,
-	MV_MODE_LINE_10GBW,
-	MV_MODE_LINE_2GBX_AN_OFF,
-	MV_MODE_LINE_1GBR_AN_OFF,
-	MV_MODE_LINE_1GBR_AN_ON,
-	MV_MODE_LINE_SGMII_SYS_AN_OFF,
-	MV_MODE_LINE_SGMII_SYS_AN_ON,
-	MV_MODE_LINE_SGMII_NET_AN_OFF,
-	MV_MODE_LINE_SGMII_NET_AN_ON,
+    unsigned int mode_num;
+    char mode_name[16];
+}; 
+
+static struct mode line_modes[] =
+{
+        {MV_MODE_LINE_10GBR, "KR"},
+        {MV_MODE_LINE_10GBW, "10GBW"},
+        {MV_MODE_LINE_2GBX_AN_OFF, "2GBX_AN_OFF"},
+        {MV_MODE_LINE_1GBR_AN_OFF, "1GBR_AN_OFF"},
+        {MV_MODE_LINE_1GBR_AN_ON, "1GBR_AN_ON"},
+        {MV_MODE_LINE_SGMII_SYS_AN_OFF, "SGMII_SYS_AN_OFF"},
+        {MV_MODE_LINE_SGMII_SYS_AN_ON, "SGMI_SYS_AN_ON"},
+        {MV_MODE_LINE_SGMII_NET_AN_OFF, "SMGII_NET_AN_OFF"},
+        {MV_MODE_LINE_SGMII_NET_AN_ON, "SGMII_NET_AN_ON"}
 };
 
-static const unsigned int mv_modes_host[] =
+static struct mode host_modes[] =
 {
-	MV_MODE_HOST_10GBR,
-	MV_MODE_HOST_10GBX2,
-	MV_MODE_HOST_10GBX4,
-	MV_MODE_HOST_2GBX_AN_OFF,
-	MV_MODE_HOST_1GBR_AN_OFF,
-	MV_MODE_HOST_1GBR_AN_ON,
-	MV_MODE_HOST_SGMII_SYS_AN_OFF,
-	MV_MODE_HOST_SGMII_SYS_AN_ON,
-	MV_MODE_HOST_SGMII_NET_AN_OFF,
-	MV_MODE_HOST_SGMII_NET_AN_ON,
+        {MV_MODE_HOST_10GBR, "KR"},
+        {MV_MODE_HOST_10GBX2, "10GBX2"},
+        {MV_MODE_HOST_10GBX4, "KX4"},
+        {MV_MODE_HOST_2GBX_AN_OFF, "2GBX_AN_OFF"},
+        {MV_MODE_HOST_1GBR_AN_OFF, "1GBR_AN_OFF"},
+        {MV_MODE_HOST_1GBR_AN_ON, "1GBR_AN_ON"},
+        {MV_MODE_HOST_SGMII_SYS_AN_OFF, "SGMII_SYS_AN_OFF"},
+        {MV_MODE_HOST_SGMII_SYS_AN_ON, "SGMII_SYS_AN_ON"},
+        {MV_MODE_HOST_SGMII_NET_AN_OFF, "SGMII_NE_AN_OFF"},
+        {MV_MODE_HOST_SGMII_NET_AN_ON, "SGMII_NET_AN_ON"}
 };
 
 struct mv88x2222_data {
@@ -169,8 +175,10 @@ static void *marvell_of_get_data(struct phy_device *phydev)
 	struct device_node *np = phydev->dev.of_node;
 	struct mv88x2222_data *pdata;
 	enum of_gpio_flags flags;
-	unsigned int val;
 	int ret;
+    char mode[32];
+    unsigned int i = 0;
+    const char *pm = mode;
 
 	pdata = devm_kzalloc(&phydev->dev, sizeof(*pdata), GFP_KERNEL);
 	if (!pdata)
@@ -184,21 +192,25 @@ static void *marvell_of_get_data(struct phy_device *phydev)
 	}
 
 	pdata->line_mode = MV_MODE_LINE_DEFAULT;
-	ret = of_property_read_u32(np, MV_MODE_LINE_OF_NAME, &val);
+    ret = of_property_read_string(np, MV_MODE_LINE_OF_NAME, &pm);
 	if (!ret) {
-		if (val < ARRAY_SIZE(mv_modes_line))
-			pdata->line_mode = mv_modes_line[val];
-		else
-			dev_warn(&phydev->dev, "wrong value of %s property\n", MV_MODE_LINE_OF_NAME);
+        for(i = 0; i < sizeof(line_modes) / sizeof(struct mode); ++i) {
+            if(strcasecmp(line_modes[i].mode_name, pm) == 0) {
+                pdata->line_mode = line_modes[i].mode_num;
+                break;
+            }
+        }
 	}
 
 	pdata->host_mode = MV_MODE_HOST_DEFAULT;
-	ret = of_property_read_u32(np, MV_MODE_HOST_OF_NAME, &val);
+    ret = of_property_read_string(np, MV_MODE_HOST_OF_NAME, &pm);
 	if (!ret) {
-		if (val < ARRAY_SIZE(mv_modes_host))
-			pdata->host_mode = mv_modes_host[val];
-		else
-			dev_warn(&phydev->dev, "wrong value of %s property\n", MV_MODE_HOST_OF_NAME);
+        for(i = 0; i < sizeof(host_modes) / sizeof(struct mode); ++i) {
+            if(strcasecmp(host_modes[i].mode_name, pm) == 0) {
+                pdata->host_mode = host_modes[i].mode_num;
+                break;
+            }
+        }
 	}
 
 	/* Default value at now */
@@ -209,6 +221,7 @@ static void *marvell_of_get_data(struct phy_device *phydev)
 
 static int marvell_soft_reset(struct phy_device *phydev) {
 	int ret = phy_write_mmd(phydev, MDIO_MMD_VEND2, MV_DEV_CHIP_RESET, MV_SW_RST_ALL);
+    int count = 50;
 
 	if (ret) {
 		dev_warn(&phydev->dev, "software reset failed\n");
@@ -218,7 +231,7 @@ static int marvell_soft_reset(struct phy_device *phydev) {
 	do {
 		usleep_range(MV_RESET_DELAY_US, MV_RESET_DELAY_US + 100);
 		ret = phy_read_mmd(phydev, MDIO_MMD_VEND2, MV_DEV_CHIP_RESET);
-	} while (ret & MV_SW_RST_ALL);
+	} while ((ret & MV_SW_RST_ALL) || count--);
 
 	return 0;
 }
@@ -231,6 +244,13 @@ static int marvell_config_init(struct phy_device *phydev) {	// add loobpack on h
 	if (ret)
 		dev_warn(&phydev->dev, "phy mode set failed\n");
 
+	/*
+	 * This must be done after mode set;
+	 */
+	ret = phy_read_mmd(phydev, MDIO_MMD_VEND2, MV_DEV_CHIP_HOST_LINE);
+	ret |= 0x8000;
+	phy_write_mmd(phydev, MDIO_MMD_VEND2, MV_DEV_CHIP_HOST_LINE, ret);
+	
 	marvell_soft_reset(phydev);
 
 	dev_info(&phydev->dev, "phy(%d, %x)=%x\n", MDIO_MMD_VEND2, MV_DEV_CHIP_HOST_LINE, phy_read_mmd(phydev, MDIO_MMD_VEND2, MV_DEV_CHIP_HOST_LINE));
@@ -297,32 +317,68 @@ static int marvell_adjust_tx(struct phy_device *phydev)
 
 static int marvell_update_link(struct phy_device *phydev) {
 	int reg;
+    int host_mode = 0;
+    int line_mode = 0;
 
 	/* Default link status */
 	phydev->link = 1;
-	/* Read host link status */
-	reg = phy_read_mmd(phydev, MDIO_MMD_PHYXS, MDIO_STAT1);
-	if ((reg < 0) || !(reg & MDIO_STAT1_LSTATUS))
-		phydev->link = 0;
-	//dev_info(&phydev->dev, "HOST link=%x\n", reg);
-	/* Read line link status */
-	reg = phy_read_mmd(phydev, MDIO_MMD_PCS, MDIO_STAT1);
-	if ((reg < 0) || !(reg & MDIO_STAT1_LSTATUS))
-		phydev->link = 0;
-	//dev_info(&phydev->dev, "LINE link=%x\n", reg);
 
+	reg = phy_read_mmd(phydev, MDIO_MMD_VEND2, MV_DEV_CHIP_HOST_LINE);
+    if (reg < 0)
+    {
+        phydev->link = 0;
+        return 0;
+    }
+
+    host_mode = reg & 0x007F;
+    line_mode = reg & 0x7F00;
+
+	/* Read host link status */
+    if (host_mode ==  MV_MODE_HOST_10GBX4)
+    {
+        reg = phy_read_mmd(phydev, MDIO_MMD_PHYXS, 0x1001);
+    }
+    else
+    {
+	    reg = phy_read_mmd(phydev, MDIO_MMD_PHYXS, MDIO_STAT1);
+    } 
+
+    if ((reg < 0) || !(reg & MDIO_STAT1_LSTATUS))
+		phydev->link = 0;
+
+	/* Read line link status */
+    if (line_mode == MV_MODE_LINE_10GBR)
+    {
+	    reg = phy_read_mmd(phydev, MDIO_MMD_PCS, MDIO_STAT1);
+    }
+    else
+    {
+        /*
+         * There we read the register fo 1000Base-X mode
+         * this mode WAS NOT CHECKED!!!
+         */
+        reg = phy_read_mmd(phydev, MDIO_MMD_PCS, 0x2001);
+    }
+    
+    if ((reg < 0) || !(reg & MDIO_STAT1_LSTATUS))
+		phydev->link = 0;
+
+    /* 
+     * PMAPMD link status is always broken
+     * later we need to update this driver;
+     */
 	reg = marvell_adjust_tx(phydev);
 	if (reg < 0)
 		phydev->link = 0;
-	//dev_info(&phydev->dev, "TX disable=%x\n", reg);
 
 	return 0;
 }
 
-static int marvell_read_status(struct phy_device *phydev) {
+static int marvell_read_status(struct phy_device *phydev) 
+{
 	int reg;
-
-	/* Update the link, but return if there was an error */
+	
+    /* Update the link, but return if there was an error */
 	reg = marvell_update_link(phydev);
 	if (reg < 0)
 		return reg;
@@ -340,7 +396,8 @@ static int marvell_config_aneg(struct phy_device *phydev)
 	/* Not supported yet */
 	phydev->lp_advertising = 0;
 	phydev->autoneg = AUTONEG_DISABLE;
-	/* Link partner advertising modes */
+
+    /* Link partner advertising modes */
 	phydev->advertising = phydev->supported;
 
 	return 0;
@@ -349,6 +406,7 @@ static int marvell_config_aneg(struct phy_device *phydev)
 static int marvell_probe(struct phy_device *phydev)
 {
 	struct mv88x2222_data *pdata = NULL;
+	int reg = 0;
 
 	if (phydev->dev.of_node)
 		pdata = marvell_of_get_data(phydev);
@@ -359,10 +417,10 @@ static int marvell_probe(struct phy_device *phydev)
 	}
 
 	phydev->priv = pdata;
-
 	dev_info(&phydev->dev, "probed %s at 0x%02x\n", phydev->drv->name, phydev->addr);
-
-	return 0;
+    reg = phy_read_mmd(phydev, MDIO_MMD_PCS, 0x0002);
+	
+    return 0;
 }
 
 static int marvell_suspend(struct phy_device *phydev)
@@ -389,7 +447,8 @@ static int marvell_suspend(struct phy_device *phydev)
 static int marvell_match_phy_device(struct phy_device *phydev)
 {
 	unsigned int phy_id = phydev->c45_ids.device_ids[MDIO_MMD_PCS] & MARVELL_PHY_ID_MASK;
-	return  (phy_id == MARVELL_PHY_ID_88X2222) || (phy_id == MARVELL_PHY_ID_88X2222R);
+	
+    return  (phy_id == MARVELL_PHY_ID_88X2222) || (phy_id == MARVELL_PHY_ID_88X2222R);
 }
 
 static struct phy_driver marvell_drivers[] = {
