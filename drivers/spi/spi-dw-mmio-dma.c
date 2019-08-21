@@ -20,6 +20,7 @@
 #include <linux/of_gpio.h>
 #include <linux/of_platform.h>
 #include <linux/property.h>
+#include <linux/dma-mapping.h>
 
 #include "spi-dw.h"
 
@@ -104,6 +105,9 @@ static int dw_spi_mmio_dma_probe(struct platform_device *pdev)
 	ret = dw_spi_add_host(&pdev->dev, dws);
 	if (ret)
 		goto out;
+
+	if (pdev->dev.dma_mask)
+		*(pdev->dev.dma_mask) = DMA_MASK_NONE;
 
 	platform_set_drvdata(pdev, dwsmmio);
 	return 0;
